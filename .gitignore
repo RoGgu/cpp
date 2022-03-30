@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+Output
+.vs
+Algorithm/Debug
+Algorithm/Maze/Debug
