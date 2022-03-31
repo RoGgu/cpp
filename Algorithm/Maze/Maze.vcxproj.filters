@@ -18,6 +18,12 @@
     <ClCompile Include="ConsoleHelper.cpp">
       <Filter>Board</Filter>
     </ClCompile>
+    <ClCompile Include="Board.cpp">
+      <Filter>Board</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -28,6 +34,12 @@
     </ClInclude>
     <ClInclude Include="ConsoleHelper.h">
       <Filter>Board</Filter>
+    </ClInclude>
+    <ClInclude Include="Board.h">
+      <Filter>Board</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>Main</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
