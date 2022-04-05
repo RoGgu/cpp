@@ -1,95 +1,202 @@
 ﻿#include <iostream>
 #include <vector>
+#include <list>
 using namespace std;
 
-template<typename T>
-class Vector
+template<typename T> 
+class Node
 {
-public :
-    Vector()
+public:
+    Node() : _prev(nullptr), _next(nullptr), _data(T())
     {
-
     }
 
-    ~Vector()
+    Node(const T& value) : _prev(nullptr), _next(nullptr), _data(value)
     {
-        if (_data)
-            delete[] _data;
     }
+
+public:
+    Node* _prev;
+    Node* _next;
+    T _data;
+};
+
+template<typename T>
+class Iterator
+{
+public:
+    Iterator() :_node(nullptr)
+    {}
+
+    Iterator(Node<T>* node) : _node(node)
+    {}
+
+    // ++it
+    Iterator& operator++()
+    {
+        _node = _node->_next;
+        return *this;
+    }
+
+    // it++
+    Iterator& operator++(int)
+    {
+        Iterator<T> temp = *this;
+        _node = _node->_next;
+        return temp;
+    }
+
+    // --it
+    Iterator& operator--()
+    {
+        _node = _node->_prev;
+        return *this;
+    }
+    // it--
+    Iterator& operator--(int)
+    {
+        Iterator<T> temp = *this;
+        _node = _node->_prev;
+        return temp;
+    }
+
+    bool operator ==(const Iterator& other)
+    {
+        return _node == other._node;
+    }
+
+    bool operator !=(const Iterator& other)
+    {
+        return _node != other._node;
+    }
+
+    // *it
+    T& operator*()
+    {
+        return _node->_data;
+    }
+
+
+public:
+    Node<T>* _node;
+};
+
+
+template<typename T>
+class List
+{
+public:
+
+    List() : _size(0)
+    {
+        _head = new Node<T>();
+        _tail = new Node<T>();
+        _head->_next = _tail;
+        _tail->_prev = _head;
+    }
+
+    ~List()
+    {
+        while (_size > 0)
+            pop_back();
+     
+        delete _head;
+        delete _tail;
+    }
+
 
     void push_back(const T& value)
     {
-        if (_size == _capacity)
-        {
-            // 증설 작업
-            int newCapacity = static_cast<int>((_capacity * 1.5));
-            if (newCapacity == _capacity) // 기존 capacity가 0일경우를 대비
-                newCapacity++;
+        AddNode(_tail, value);
+    }
 
-            reserve(newCapacity);
-        }
+    void pop_back()
+    {
+        RemoveNode(_tail->_prev);
+    }
 
-        // 데이터 저장
-        _data[_size] = value;
+    // 붙일때는 위치 노드 앞에 붙인다.
+    Node<T>* AddNode(Node<T>* before, const T& value)
+    {
+        Node<T>* newNode = new Node<T>(value);
+        Node<T>* prev = before->_prev;
 
-        // 데이터 개수 증가
+        prev->_next = newNode;
+        newNode->_prev = prev;
+
+        newNode->_next = before;
+        before->_prev = newNode;
+
         _size++;
+
+        return newNode;
     }
 
-    void reserve(int capacity)
+    // 삭제할 노드 삭제 전에 그 노드의 앞과 두에 노드 연결
+    Node<T>* RemoveNode(Node<T>* node)
     {
-        if (_capacity >= capacity) // 새로 늘릴려는게 기존보다 작으면 할 필요 없다.
-            return;
+        Node<T>* prev = node->_prev;
+        Node<T>* next = node->_next;
 
-        _capacity = capacity;
+        prev->_next = next;
+        next->_prev = prev;
 
-        T* newData = new T[_capacity];
+        delete node;
 
-        // 데이터 복사
-        for (int i = 0; i < _size; i++)
-            newData[i] = _data[i];
+        _size--;
 
-        if (_data)
-            delete[] _data;
-
-        //교체
-        _data = newData;
+        return next;
     }
 
-    T& operator[](const int pos) { return _data[pos]; }
+    int Size() { return _size; }
 
-    int size() { return _size; }
-    int capacity() { return _capacity; }
 
-    void clear()
+public:
+    using iterator = Iterator<T>;
+
+    iterator begin() { return iterator(_head->_next); }
+    iterator end() { return iterator(_tail); }
+
+    iterator insert(iterator it, const T& value)
     {
-        if (_data)
-        {
-            delete[] _data;
-            _data = new T[_capacity];
-        }
+        Node<T>* node =  AddNode(it._node, value);
+        return iterator(node);
+    }
 
-        _size = 0;
+    iterator erase(iterator it)
+    {
+        Node<T>* node =RemoveNode(it._node);
+        return iterator(node);
     }
 
 private:
-    T*  _data = nullptr; // 가지고 있는 데이터 배열
-    int _size = 0; // 현재 데이터 수
-    int _capacity = 0; // 할당받은 총 데이터 크기
+    Node<T>* _head; // 머리 더미 데이터
+    Node<T>* _tail; // 끝을 나타내는 더미 데이터
+    int _size;
 };
+
+
 
 int main()
 {
-    Vector<int> v;
+    List<int> li;
 
-    v.reserve(100); // 만약 배열의 대략적인 크기를 안다면 처음부터 capacity즉 여유값을 미리 할당해주면 좋다
+    List<int>::iterator eraseIt;
 
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < 10; i++)
     {
-        v.push_back(i);
-        cout << v[i]<< " " << v.size() << " " << v.capacity() << endl;
+        if (i == 5)
+            eraseIt = li.insert(li.end(), i);
+        else
+            li.push_back(i);
     }
 
-    v.clear();
-    cout << v.size() << " " << v.capacity() << endl;
+    li.pop_back();
+
+    li.erase(eraseIt);
+
+    for (List<int>::iterator it = li.begin(); it != li.end(); it++)
+    {
+        cout << (*it) << endl;
+    }
 }
