@@ -2,15 +2,88 @@
 #include <vector>
 #include <list>
 #include <stack>
+#include <queue>
 using namespace std;
 
-// Statck (LIFO Last-In-Frist-Out 후입선출 (뒤 늦게 들어온애가 가장 만저 나간다))
+// Queue (FIFO First-In-First-Out 선입선출)
 
-// [1][2][3][4] << 밀어넣음
-// 되돌리기 (Ctrl+Z)
+// front << [1][2][3][4] << rear(back)
+// ex) 대기열
 
-template<typename T, typename Contatiner = vector<T>> // 두번쨰 type로 컨테이너 타입 지정해줄 수 있다.
-class Stack
+
+// vector를 순환 구조로 사용
+// [front / back][][][][][][][][]
+// [front ][back][][][][][][][][]
+// front 앞에 붙이는 거랑 back 맨뒤 데이터 기준점을 둔다
+// [][][back][][][][][front][][]
+// 이런식으로 back이 front 앞으로 올 수 도있다.
+// -그럼 front 에서부터 한바퀴 돌아서 0으로가서 back까지가 범위
+template<typename T>
+class ArrayQueue
+{
+public:
+    ArrayQueue()
+    {
+        _container.resize(100);
+    }
+
+    void push(const T& value)
+    {
+        // 데이터 다 찾는지 체크
+        if (_size == _container.size())
+        {
+            // 증설 작업
+            int newSize = max(1, _size * 2); // _size가 처음에 0일 경우를 대비해서
+            vector<T> newData;
+            newData.resize(newSize);
+
+            // 데이터 복사
+            for (int i = 0; i < _size; i++)
+            {
+                int index = (_front + i) % _container.size(); // front부터 back까지의 데이터 새 데이터배열 0번부터 넣어줌
+                newData[i] = _container[index];
+            }
+
+            _container.swap(newData);
+            _front = 0;
+            _back = _size;
+        }
+
+        _container[_back] = value;
+        _back = (_back + 1) % _container.size(); // 나머지 연산으로 범위 빠져나가도 한바퀴 돌아서 앞으로 가게함
+        _size++; // 들어가 있는 데이터의 개 수 size()랑 다르다
+    }
+
+    void pop()
+    {
+        if (_size == 0)
+            return;
+
+        _front = (_front + 1) % _container.size(); // 애도 한바퀴 돌면 앞으로 오게 나머지 연산
+        _size--;
+
+    }
+
+    T& front()
+    {
+        return _container[_front];
+    }
+
+    bool empty() { return _size == 0; }
+    bool size() { return _size; }
+
+
+private:
+    vector<T> _container;
+
+    int _front = 0;
+    int _back = 0;
+    int _size = 0;
+};
+
+
+template<typename T>
+class ListQueue
 {
 public:
     void push(const T& value)
@@ -20,43 +93,36 @@ public:
 
     void pop()
     {
-        _container.pop_back();
+        _container.erase(_container.begin());
+
     }
 
-    T& top()
+    T& front()
     {
-        return _container.back(); // 마지막 데이터 뱉어줌
+        return _container.front();
     }
 
-
-    int size() { return _container.size(); }
     bool empty() { return _container.empty(); }
+    bool size() { return _container.size(); }
+
 
 private:
-    //vector<T> _container;
-    //list<T> _container; // list로 바꿔도 둘에 함수 호출이나 그런게 똑같아서 바로 작동된다.
-    Contatiner _container; // 어떤 타입으로할지도 templaye인자로 받아서 작업도 가능하다
+    list<T> _container;
 };
-
 
 int main()
 {
-    Stack<int, vector<int>> s;
+    ArrayQueue<int> q;
 
-    // 삽입
-    s.push(1);
-    s.push(2);
-    s.push(3);
+    for (int i = 0; i < 500; i++)
+        q.push(i);
 
-    while (s.empty() == false) 
+    while (q.empty() == false)
     {
-        // 최상위 원소
-        int data = s.top();
-
-        // 최상위 원소 삭제
-        s.pop();
-        cout << data << endl;
+        int value = q.front();
+        q.pop();
+        cout << value << endl;
     }
 
-    int size = s.size();
+    int size = q.size();
 }
