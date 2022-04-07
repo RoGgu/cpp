@@ -1,202 +1,62 @@
 ﻿#include <iostream>
 #include <vector>
 #include <list>
+#include <stack>
 using namespace std;
 
-template<typename T> 
-class Node
+// Statck (LIFO Last-In-Frist-Out 후입선출 (뒤 늦게 들어온애가 가장 만저 나간다))
+
+// [1][2][3][4] << 밀어넣음
+// 되돌리기 (Ctrl+Z)
+
+template<typename T, typename Contatiner = vector<T>> // 두번쨰 type로 컨테이너 타입 지정해줄 수 있다.
+class Stack
 {
 public:
-    Node() : _prev(nullptr), _next(nullptr), _data(T())
+    void push(const T& value)
     {
+        _container.push_back(value);
     }
 
-    Node(const T& value) : _prev(nullptr), _next(nullptr), _data(value)
+    void pop()
     {
+        _container.pop_back();
     }
 
-public:
-    Node* _prev;
-    Node* _next;
-    T _data;
-};
-
-template<typename T>
-class Iterator
-{
-public:
-    Iterator() :_node(nullptr)
-    {}
-
-    Iterator(Node<T>* node) : _node(node)
-    {}
-
-    // ++it
-    Iterator& operator++()
+    T& top()
     {
-        _node = _node->_next;
-        return *this;
-    }
-
-    // it++
-    Iterator& operator++(int)
-    {
-        Iterator<T> temp = *this;
-        _node = _node->_next;
-        return temp;
-    }
-
-    // --it
-    Iterator& operator--()
-    {
-        _node = _node->_prev;
-        return *this;
-    }
-    // it--
-    Iterator& operator--(int)
-    {
-        Iterator<T> temp = *this;
-        _node = _node->_prev;
-        return temp;
-    }
-
-    bool operator ==(const Iterator& other)
-    {
-        return _node == other._node;
-    }
-
-    bool operator !=(const Iterator& other)
-    {
-        return _node != other._node;
-    }
-
-    // *it
-    T& operator*()
-    {
-        return _node->_data;
+        return _container.back(); // 마지막 데이터 뱉어줌
     }
 
 
-public:
-    Node<T>* _node;
-};
-
-
-template<typename T>
-class List
-{
-public:
-
-    List() : _size(0)
-    {
-        _head = new Node<T>();
-        _tail = new Node<T>();
-        _head->_next = _tail;
-        _tail->_prev = _head;
-    }
-
-    ~List()
-    {
-        while (_size > 0)
-            pop_back();
-     
-        delete _head;
-        delete _tail;
-    }
-
-
-    void push_back(const T& value)
-    {
-        AddNode(_tail, value);
-    }
-
-    void pop_back()
-    {
-        RemoveNode(_tail->_prev);
-    }
-
-    // 붙일때는 위치 노드 앞에 붙인다.
-    Node<T>* AddNode(Node<T>* before, const T& value)
-    {
-        Node<T>* newNode = new Node<T>(value);
-        Node<T>* prev = before->_prev;
-
-        prev->_next = newNode;
-        newNode->_prev = prev;
-
-        newNode->_next = before;
-        before->_prev = newNode;
-
-        _size++;
-
-        return newNode;
-    }
-
-    // 삭제할 노드 삭제 전에 그 노드의 앞과 두에 노드 연결
-    Node<T>* RemoveNode(Node<T>* node)
-    {
-        Node<T>* prev = node->_prev;
-        Node<T>* next = node->_next;
-
-        prev->_next = next;
-        next->_prev = prev;
-
-        delete node;
-
-        _size--;
-
-        return next;
-    }
-
-    int Size() { return _size; }
-
-
-public:
-    using iterator = Iterator<T>;
-
-    iterator begin() { return iterator(_head->_next); }
-    iterator end() { return iterator(_tail); }
-
-    iterator insert(iterator it, const T& value)
-    {
-        Node<T>* node =  AddNode(it._node, value);
-        return iterator(node);
-    }
-
-    iterator erase(iterator it)
-    {
-        Node<T>* node =RemoveNode(it._node);
-        return iterator(node);
-    }
+    int size() { return _container.size(); }
+    bool empty() { return _container.empty(); }
 
 private:
-    Node<T>* _head; // 머리 더미 데이터
-    Node<T>* _tail; // 끝을 나타내는 더미 데이터
-    int _size;
+    //vector<T> _container;
+    //list<T> _container; // list로 바꿔도 둘에 함수 호출이나 그런게 똑같아서 바로 작동된다.
+    Contatiner _container; // 어떤 타입으로할지도 templaye인자로 받아서 작업도 가능하다
 };
-
 
 
 int main()
 {
-    List<int> li;
+    Stack<int, vector<int>> s;
 
-    List<int>::iterator eraseIt;
+    // 삽입
+    s.push(1);
+    s.push(2);
+    s.push(3);
 
-    for (int i = 0; i < 10; i++)
+    while (s.empty() == false) 
     {
-        if (i == 5)
-            eraseIt = li.insert(li.end(), i);
-        else
-            li.push_back(i);
+        // 최상위 원소
+        int data = s.top();
+
+        // 최상위 원소 삭제
+        s.pop();
+        cout << data << endl;
     }
 
-    li.pop_back();
-
-    li.erase(eraseIt);
-
-    for (List<int>::iterator it = li.begin(); it != li.end(); it++)
-    {
-        cout << (*it) << endl;
-    }
+    int size = s.size();
 }
