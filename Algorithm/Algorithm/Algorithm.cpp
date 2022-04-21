@@ -5,107 +5,106 @@
 #include <queue>
 using namespace std;
 
-// 트리
+// 우선 순위 큐 구현
 
-// 생명주기 알아서 관리하도록 스마트 포인터 사용
-using NodeRef = shared_ptr<struct Node>; 
-
-struct Node
+template<typename T, typename Container = vector<T>, typename Predicate = less<T>>
+class Priority_queue
 {
-    Node() { }
-    Node(const string& data) : data(data) { }
+public:
+    Priority_queue()
+    {
+        _heap.clear();
+    }
 
-    string data;
-    vector<NodeRef> children;
+    void push(const T& data)
+    {
+        // 우선 힙 구조부터 맞춰준다.
+        _heap.push_back(data);
+
+        // 도장 깨기 시작
+        int now = static_cast<int>(_heap.size() - 1);
+        
+        // 루트 노드까지
+        while (now > 0)
+        {
+            if ((now - 1) < 0)
+                break;
+
+            // 부모 노드의 데이터와 비교해서 더 작으면 패배
+            int next = (now - 1) / 2;    
+            if (_predicate(_heap[now], _heap[next])) // 기본 less로 되어 이써서 더 작은지 비교
+                break;
+
+            // 데이터 교체
+            ::swap(_heap[now], _heap[next]);
+            now = next;
+        }
+    }
+
+    void pop()
+    {
+        _heap[0] = _heap.back();
+        _heap.pop_back();
+
+        int now = 0;
+
+        while (true)
+        {
+            int left = (now * 2) + 1;
+            int right = (now * 2) + 2;
+
+            // 리프에 도달한 경우
+            if (left >= _heap.size())
+                break;
+
+            int next = now;
+
+            // 왼쪽과 비교
+            if (_predicate(_heap[next], _heap[left]))
+                next = left;
+            
+            // 둘 중 승자를 오른쪽과 비교
+            if (right < (int)_heap.size() && _predicate(_heap[next], _heap[right]))
+                next = right;
+
+            // 왼쪽/오른쪽 둘 다 현재 값보다 작으면 종료
+            if (next == now)
+                break;
+
+            ::swap(_heap[now], _heap[next]);
+        }
+    }
+
+    T& top()
+    {
+        return _heap[0];
+    }
+
+    int size() { return _heap.size(); }
+    int empty() { return _heap.empty() == true; }
+
+private:
+    Container _heap;
+    Predicate _predicate = {}; // 기본 less로 되어 있다 왼쪽값이 더 작으면 true 리턴
 };
-
-NodeRef CreateTree()
-{
-    NodeRef root = make_shared<Node>("R1 개발실");
-    {
-        NodeRef node = make_shared<Node>("디자인팀");
-        root->children.push_back(node);
-        {
-            NodeRef leaf = make_shared<Node>("전투");
-            node->children.push_back(leaf);
-        }
-        {
-            NodeRef leaf = make_shared<Node>("경제");
-            node->children.push_back(leaf);
-        }
-        {
-            NodeRef leaf = make_shared<Node>("스토리");
-            node->children.push_back(leaf);
-        }
-    }
-    {
-        NodeRef node = make_shared<Node>("프로그래밍팀");
-        root->children.push_back(node);
-        {
-            NodeRef leaf = make_shared<Node>("서버");
-            node->children.push_back(leaf);
-        }
-        {
-            NodeRef leaf = make_shared<Node>("클라");
-            node->children.push_back(leaf);
-        }
-        {
-            NodeRef leaf = make_shared<Node>("엔진");
-            node->children.push_back(leaf);
-        }
-    }
-    {
-        NodeRef node = make_shared<Node>("아트팀");
-        root->children.push_back(node);
-        {
-            NodeRef leaf = make_shared<Node>("배경");
-            node->children.push_back(leaf);
-        }
-        {
-            NodeRef leaf = make_shared<Node>("캐릭터");
-            node->children.push_back(leaf);
-            {
-                NodeRef leaf2 = make_shared<Node>("더미");
-                leaf->children.push_back(leaf2);
-            }
-        }
-    }
-
-    return root;
-}
-
-// 재귀로 돌면서 호출하는게 잘 어울린다
-void PrintTree(NodeRef root, int depth)
-{
-    for (int i = 0; i < depth; i++) // 뎁스로 계층구조 표현
-        cout << "-";
-
-    cout << root->data << endl;
-
-    for (NodeRef& child : root->children)
-        PrintTree(child, depth + 1);
-}
-
-// 깊이(depth) : 루트에서 어떤 노드에 도달하기 위해 거쳐야 하는 간선의 수 (aka, 몇 층?)
-// 높이(height) : 가장 깊숙히 있는 노드의 깊이 (max(depth))
-int GetHeight(NodeRef root)
-{
-    int height = 1;
-
-    for (NodeRef& child : root->children)
-    {
-        height = max(height, GetHeight(child) + 1); // 자식 마다 깊이가 다를 수 있어서 가장 큰 깊이가 높이
-    }
-
-    return height;
-
-}
 
 int main()
 {
-    NodeRef root = CreateTree();
-    PrintTree(root, 0);
+    //priority_queue<int, vector<int>, greater<int>> pq; // 역순으로 만드는 방법 greater<T>를 넣어준다 , 기본 less<T>로 되어있음
 
-    int height = GetHeight(root);
-    cout << "Tree Height : "<<  height << endl;
+    Priority_queue<int, vector<int>, greater<int>> pq;
+
+    pq.push(100);
+    pq.push(300);
+    pq.push(200);
+    pq.push(500);
+    pq.push(400);
+
+    while (pq.empty() == false)
+    {
+        int value = pq.top();
+        pq.pop();
+
+        cout << value << endl;
+    }
 }
